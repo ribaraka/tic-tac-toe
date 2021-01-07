@@ -3,6 +3,7 @@ const crossesTurn = 'ch';
 const circleTurn = 'r';
 const wonMessage = document.querySelector('.won-message');
 const wonTitle = document.querySelector('.won-title');
+const restartButton = document.querySelector('.restart-btn');
 
 const winningCombinations = [
   [0, 1, 2],
@@ -15,7 +16,18 @@ const winningCombinations = [
   [2, 4, 6],
 ];
 let orderOfTurn = crossesTurn;
+startGame();
 
+function startGame() {
+  orderOfTurn = crossesTurn;
+  allCells.forEach(cell => {
+    cell.classList.remove(crossesTurn);
+    cell.classList.remove(circleTurn);
+    cell.addEventListener('click', handleClick);
+
+  })
+
+}
   function placeMark(cell, currentClass) {
     cell.classList.add(currentClass);
   }
@@ -44,7 +56,7 @@ function isDraw() {
     } else {
       wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
     }
-    wonTitle.classList.remove('hidden');
+    wonTitle.classList.toggle('hidden');
   }
 
 function handleClick(e) {
@@ -60,6 +72,7 @@ function handleClick(e) {
   }
 }
 
-allCells.forEach(cell => {
-  cell.addEventListener('click', handleClick)
-})
+restartButton.addEventListener('click', startGame);
+
+
+
