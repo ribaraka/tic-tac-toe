@@ -1,7 +1,9 @@
 const allCells = document.querySelectorAll('.cell');
-const xTurn = 'ch';
+const crossesTurn = 'ch';
 const circleTurn = 'r';
-let startOfTurn = xTurn;
+const wonMessage = document.querySelector('.won-message');
+const wonTitle = document.querySelector('.won-title');
+
 const winningCombinations = [
   [0, 1, 2],
   [3, 4, 5],
@@ -12,50 +14,52 @@ const winningCombinations = [
   [0, 4, 8],
   [2, 4, 6],
 ];
+let orderOfTurn = crossesTurn;
 
-// const winningCombinations ={
-//   horizontalWonCombination:[
-//   [0, 1, 2],
-//   [3, 4, 5],
-//   [6, 7, 8],
-// ],
-//   verticalWonCombination: [
-//   [0, 3, 6],
-//   [1, 4, 7],
-//   [2, 5, 8],
-// ],
-//  diagonalRightWonCombination: [0, 4, 8],
-//  diagonalLeftWonCombination: [2, 4, 6],
-// };
+  function placeMark(cell, currentClass) {
+    cell.classList.add(currentClass);
+  }
 
+function isDraw() {
+  return [...allCells].every(cell => {
+    return  cell.classList.contains(crossesTurn) || cell.classList.contains(circleTurn);
+  })
+}
+
+  function swapTurns() {
+    orderOfTurn = !orderOfTurn;
+  }
+
+  function checkWin(currentTurn) {
+    return winningCombinations.some(combination => {
+      return combination.every(index => {
+        return allCells[index].classList.contains(currentTurn);
+      })
+    })
+  }
+
+  function endGame(draw) {
+    if (draw) {
+      wonMessage.textContent = `It's a draw!`;
+    } else {
+      wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
+    }
+    wonTitle.classList.remove('hidden');
+  }
+
+function handleClick(e) {
+  const cell = e.target;
+  let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
+  placeMark(cell, currentTurn);
+  if (checkWin(currentTurn)) {
+    endGame(false);
+  } else if (isDraw()) {
+    endGame(true);
+  } else {
+    swapTurns();
+  }
+}
 
 allCells.forEach(cell => {
   cell.addEventListener('click', handleClick)
 })
-
-function handleClick(e) {
-  const cell = e.target;
-  let currentClass = startOfTurn ? xTurn : circleTurn;
-  placeMark(cell, currentClass);
-  if (checkWin(currentClass)) {
-    console.log('winner');
-  }
-  swapTurns();
-}
-
-function placeMark(cell, currentClass) {
-  cell.classList.add(currentClass);
-}
-
-function swapTurns() {
-  startOfTurn = !startOfTurn;
-}
-
-function checkWin(currentClass) {
-  return winningCombinations.some(combination => {
-    return combination.every(index => {
-      return allCells[index].classList.contains(currentClass);
-    })
-  })
-}
-
