@@ -4,7 +4,8 @@ const circleTurn = 'r';
 const wonMessage = document.querySelector('.won-message');
 const wonTitle = document.querySelector('.won-title');
 const restartButton = document.querySelector('.restart-btn');
-
+const unDoButton = document.querySelector('undo-btn btn');
+const redoDoButton = document.querySelector('redo-btn btn');
 const winningCombinations = [
   [0, 1, 2],
   [3, 4, 5],
@@ -16,48 +17,48 @@ const winningCombinations = [
   [2, 4, 6],
 ];
 let orderOfTurn = crossesTurn;
-startGame();
 
+startGame();
 function startGame() {
   orderOfTurn = crossesTurn;
   allCells.forEach(cell => {
     cell.classList.remove(crossesTurn);
     cell.classList.remove(circleTurn);
+    wonTitle.classList.add('hidden');
     cell.addEventListener('click', handleClick);
-
   })
-
 }
-  function placeMark(cell, currentClass) {
-    cell.classList.add(currentClass);
-  }
+
+function placeMark(cell, currentClass) {
+  cell.classList.add(currentClass);
+}
 
 function isDraw() {
   return [...allCells].every(cell => {
-    return  cell.classList.contains(crossesTurn) || cell.classList.contains(circleTurn);
+    return cell.classList.contains(crossesTurn) || cell.classList.contains(circleTurn);
   })
 }
 
-  function swapTurns() {
-    orderOfTurn = !orderOfTurn;
-  }
+function swapTurns() {
+  orderOfTurn = !orderOfTurn;
+}
 
-  function checkWin(currentTurn) {
-    return winningCombinations.some(combination => {
-      return combination.every(index => {
-        return allCells[index].classList.contains(currentTurn);
-      })
+function checkWin(currentTurn) {
+  return winningCombinations.some(combination => {
+    return combination.every(index => {
+      return allCells[index].classList.contains(currentTurn);
     })
-  }
+  })
+}
 
-  function endGame(draw) {
-    if (draw) {
-      wonMessage.textContent = `It's a draw!`;
-    } else {
-      wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
-    }
-    wonTitle.classList.toggle('hidden');
+function endGame(draw) {
+  if (draw) {
+    wonMessage.textContent = `It's a draw!`;
+  } else {
+    wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
   }
+  wonTitle.classList.toggle('hidden');
+}
 
 function handleClick(e) {
   const cell = e.target;
@@ -73,6 +74,4 @@ function handleClick(e) {
 }
 
 restartButton.addEventListener('click', startGame);
-
-
 
