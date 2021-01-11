@@ -19,6 +19,7 @@ const winningCombinations = [
 let orderOfTurn = crossesTurn;
 
 startGame();
+
 function startGame() {
   orderOfTurn = crossesTurn;
   allCells.forEach(cell => {
@@ -58,20 +59,23 @@ function endGame(draw) {
     wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
   }
   wonTitle.classList.toggle('hidden');
+  allCells.forEach(cell => {
+    cell.removeEventListener('click', handleClick);
+  })
 }
 
-function handleClick(e) {
-  const cell = e.target;
-  let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
-  placeMark(cell, currentTurn);
-  if (checkWin(currentTurn)) {
-    endGame(false);
-  } else if (isDraw()) {
-    endGame(true);
-  } else {
-    swapTurns();
+  function handleClick(e) {
+    const cell = e.target;
+    let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
+    placeMark(cell, currentTurn);
+    if (checkWin(currentTurn)) {
+      endGame(false);
+    } else if (isDraw()) {
+      endGame(true);
+    } else {
+      swapTurns();
+    }
   }
-}
 
-restartButton.addEventListener('click', startGame);
+  restartButton.addEventListener('click', startGame);
 
