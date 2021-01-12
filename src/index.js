@@ -1,11 +1,11 @@
 const allCells = document.querySelectorAll('.cell');
-const crossesTurn = 'ch';
-const circleTurn = 'r';
+const crossesTurn = 'r';
+const circleTurn = 'ch';
 const wonMessage = document.querySelector('.won-message');
 const wonTitle = document.querySelector('.won-title');
 const restartButton = document.querySelector('.restart-btn');
-const unDoButton = document.querySelector('undo-btn btn');
-const redoDoButton = document.querySelector('redo-btn btn');
+const unDoButton = document.querySelector('.undo-btn');
+const redoDoButton = document.querySelector('.redo-btn');
 const winningCombinations = [
   [0, 1, 2],
   [3, 4, 5],
@@ -16,22 +16,23 @@ const winningCombinations = [
   [0, 4, 8],
   [2, 4, 6],
 ];
-let orderOfTurn = crossesTurn;
+let orderOfTurn = null;
+
+  let history = [];
+  let undoHistory = [];
 
 startGame();
 
 function startGame() {
   orderOfTurn = crossesTurn;
+  wonTitle.classList.add('hidden');
+  history = [];
+  undoHistory = [];
   allCells.forEach(cell => {
     cell.classList.remove(crossesTurn);
     cell.classList.remove(circleTurn);
-    wonTitle.classList.add('hidden');
     cell.addEventListener('click', handleClick);
   })
-}
-
-function placeMark(cell, currentClass) {
-  cell.classList.add(currentClass);
 }
 
 function isDraw() {
@@ -56,9 +57,9 @@ function endGame(draw) {
   if (draw) {
     wonMessage.textContent = `It's a draw!`;
   } else {
-    wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
+    wonMessage.textContent = `${orderOfTurn ?  "Crosses won!" : "Toes won!"}`;
   }
-  wonTitle.classList.toggle('hidden');
+  wonTitle.classList.remove('hidden');
   allCells.forEach(cell => {
     cell.removeEventListener('click', handleClick);
   })
@@ -66,16 +67,43 @@ function endGame(draw) {
 
   function handleClick(e) {
     const cell = e.target;
-    let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
+    let currentTurn = orderOfTurn ? circleTurn : crossesTurn;
     placeMark(cell, currentTurn);
     if (checkWin(currentTurn)) {
       endGame(false);
     } else if (isDraw()) {
       endGame(true);
-    } else {
-      swapTurns();
     }
+    swapTurns();
   }
 
-  restartButton.addEventListener('click', startGame);
+function placeMark(cell, currentTurn) {
+  cell.classList.add(currentTurn);
+  unDoButton.disabled = false;
+  history.push(cell);
+}
 
+function undoClick() {
+  redoDoButton.disabled = false;
+  wonTitle.classList.add('hidden');
+  allCells.forEach(cell => {
+    cell.addEventListener('click', handleClick);
+  });
+  let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
+  let undoElement = history.pop();
+  undoHistory.push(undoElement);
+  undoElement.classList.remove(currentTurn);
+  swapTurns();
+  if (!history.length){
+    unDoButton.disabled = true;
+  }
+}
+
+function redoClick(){
+  let undoElement = undoHistory.pop();
+  console.log(undoElement);
+}
+
+  restartButton.addEventListener('click', startGame);
+  unDoButton.addEventListener('click', undoClick);
+redoDoButton.addEventListener('click', redoClick);
