@@ -18,8 +18,8 @@ const winningCombinations = [
 ];
 let orderOfTurn = null;
 
-  let history = [];
-  let undoHistory = [];
+let history = [];
+let undoHistory = [];
 
 startGame();
 
@@ -57,7 +57,7 @@ function endGame(draw) {
   if (draw) {
     wonMessage.textContent = `It's a draw!`;
   } else {
-    wonMessage.textContent = `${orderOfTurn ?  "Crosses won!" : "Toes won!"}`;
+    wonMessage.textContent = `${orderOfTurn ? "Crosses won!" : "Toes won!"}`;
   }
   wonTitle.classList.remove('hidden');
   allCells.forEach(cell => {
@@ -65,22 +65,23 @@ function endGame(draw) {
   })
 }
 
-  function handleClick(e) {
-    const cell = e.target;
-    let currentTurn = orderOfTurn ? circleTurn : crossesTurn;
-    placeMark(cell, currentTurn);
-    if (checkWin(currentTurn)) {
-      endGame(false);
-    } else if (isDraw()) {
-      endGame(true);
-    }
-    swapTurns();
+function handleClick(e) {
+  const cell = e.target;
+  let currentTurn = orderOfTurn ? circleTurn : crossesTurn;
+  placeMark(cell, currentTurn);
+  if (checkWin(currentTurn)) {
+    endGame(false);
+  } else if (isDraw()) {
+    endGame(true);
   }
+  swapTurns();
+}
 
 function placeMark(cell, currentTurn) {
   cell.classList.add(currentTurn);
   unDoButton.disabled = false;
   history.push(cell);
+  undoHistory = [];
 }
 
 function undoClick() {
@@ -94,16 +95,22 @@ function undoClick() {
   undoHistory.push(undoElement);
   undoElement.classList.remove(currentTurn);
   swapTurns();
-  if (!history.length){
+  if (!history.length) {
     unDoButton.disabled = true;
   }
 }
 
-function redoClick(){
+function redoClick() {
+  swapTurns();
   let undoElement = undoHistory.pop();
-  console.log(undoElement);
+  let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
+  undoElement.classList.add(currentTurn);
+  history.push(undoElement);
+  if (!undoHistory.length) {
+    redoDoButton.disabled = true;
+  }
 }
 
-  restartButton.addEventListener('click', startGame);
-  unDoButton.addEventListener('click', undoClick);
+restartButton.addEventListener('click', startGame);
+unDoButton.addEventListener('click', undoClick);
 redoDoButton.addEventListener('click', redoClick);
