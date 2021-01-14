@@ -78,9 +78,11 @@ function handleClick(e) {
 }
 
 function placeMark(cell, currentTurn) {
-  cell.classList.add(currentTurn);
   unDoButton.disabled = false;
+  cell.classList.add(currentTurn);
   history.push(cell);
+  localStorage.setItem('history', JSON.stringify(history));
+  console.log(history);
   undoHistory = [];
 }
 
@@ -92,9 +94,12 @@ function undoClick() {
   });
   let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
   let undoElement = history.pop();
+  localStorage.setItem('history', JSON.stringify(history));
+  console.log(history);
   undoHistory.push(undoElement);
   undoElement.classList.remove(currentTurn);
   swapTurns();
+
   if (!history.length) {
     unDoButton.disabled = true;
   }
@@ -106,6 +111,13 @@ function redoClick() {
   let currentTurn = orderOfTurn ? crossesTurn : circleTurn;
   undoElement.classList.add(currentTurn);
   history.push(undoElement);
+  localStorage.setItem('history', JSON.stringify(history));
+  console.log(history);
+  if (checkWin(currentTurn)) {
+    endGame(false);
+  } else if (isDraw()) {
+    endGame(true);
+  }
   if (!undoHistory.length) {
     redoDoButton.disabled = true;
   }
@@ -114,3 +126,4 @@ function redoClick() {
 restartButton.addEventListener('click', startGame);
 unDoButton.addEventListener('click', undoClick);
 redoDoButton.addEventListener('click', redoClick);
+
