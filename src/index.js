@@ -9,6 +9,8 @@ const redoDoButton = document.querySelector('.redo-btn');
 let lastTurn = circleTurn;
 let history = [];
 let undoHistory = [];
+const orderedCells = getOrderedCells(allCells);
+const numberOfRows = Math.sqrt(orderedCells.length);
 
 startGame();
 
@@ -127,9 +129,10 @@ function getWinner() {
   // horizontal(allCells);
 
   // TODO: check vertical scenario
-
+  // vertical(input)
   // TODO: check diagonal scenario
-
+  // diagonalRight(input)
+  // diagonalLeft(input)
   return {
     winnerWasFound: true,
     scenario: '',//diagonal, vertical, horizontal
@@ -143,16 +146,11 @@ function renderGameEnd() {
 }
 
 function horizontal(input) {
-  //input contains all battlefield cells. it should be array.
   input = getOrderedCells(input);
   let numberOfRows = Math.sqrt(input.length);
-  let arr = [];
   for (let i = 0; i < numberOfRows; i++) {
-    // i = 0; numberOfRows = 3; let tmp i * numberOfRows = 0
-    // i = 1; numberOfRows = 3; let tmp i * numberOfRows = 3
-    // i = 2; numberOfRows = 3; let tmp i * numberOfRows = 6
-    let j = i * numberOfRows; // 0 - 3; 3  - 6; 6 - 9;
-    let theLatestIndexOfRow = i * numberOfRows + numberOfRows; // 3; 6; 9
+    let j = i * numberOfRows;
+    let theLatestIndexOfRow = i * numberOfRows + numberOfRows;
     let cellClass = getClass(input[j]);
     if (cellClass === '') {
       continue
@@ -169,7 +167,77 @@ function horizontal(input) {
     if (!badRow){
       return result;
     }
-    // if i got here winner row was found.
+  }
+  return [];
+}
+
+function vertical(input) {
+  input = getOrderedCells(input);
+  let numberOfRows = Math.sqrt(input.length);
+  for (let i = 0; i < numberOfRows; i++){
+    let j = i;
+    let theLatestIndexOfCol = i + input.length - numberOfRows;
+    let cellClass = getClass(input[j]);
+    if (cellClass === '') {
+      continue
+    }
+    let result = [];
+    let badRow = false;
+    while ( j <= theLatestIndexOfCol){
+      if (getClass(input[j]) !== cellClass){
+        badRow = true;
+        break
+      }
+      result.push(input[j]);
+      j += numberOfRows;
+    }
+    if (!badRow){
+      return result;
+    }
+  }
+  return [];
+}
+
+function diagonalRight(input) {
+  input = getOrderedCells(input);
+  let numberOfRows = Math.sqrt(input.length);
+  let index = input[0];
+  let cellClass = getClass(index);
+  let result = [];
+  let badRow = false;
+  for (let i = 0; i <= input.length; i++) {
+      if (getClass(input[i]) !== cellClass){
+        badRow = true;
+        break
+      }
+    result.push(input[i]);
+      i += numberOfRows;
+    }
+    if (!badRow){
+      return result;
+    }
+  return [];
+}
+
+function diagonalLeft(input) {
+  input = getOrderedCells(input);
+  let numberOfRows = Math.sqrt(input.length);
+  let startPointFromLeftToRight = input.length - numberOfRows
+  let index = input[startPointFromLeftToRight];
+  let cellClass = getClass(index);
+  console.log(index);
+  let result = [];
+  let badRow = false;
+  for (let i = startPointFromLeftToRight; i > 0; i++) {
+    if (getClass(input[i]) !== cellClass){
+      badRow = true;
+      break
+    }
+    result.push(input[i]);
+    i -= numberOfRows;
+  }
+  if (!badRow){
+    return result;
   }
   return [];
 }
