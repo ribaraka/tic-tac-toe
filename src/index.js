@@ -49,27 +49,11 @@ function currentTurn() {
   return  lastTurn === circleTurn ? crossesTurn :  circleTurn;
 }
 
-function caseWin() {
-  // if (isWin(currentTurn())) {
-  //   wonMessage.textContent = `${lastTurn ? "Crosses won!" : "Toes won!"}`;
-  //   wonTitle.classList.remove('hidden');
-  //   disableClick();
-  // }
-  // if (isDraw()) {
-  //   wonMessage.textContent = `It's a draw!`;
-  //   wonTitle.classList.remove('hidden');
-  // }
-}
+
 
 function disableClick() {
   allCells.forEach(cell => {
     cell.removeEventListener('click', clickHandler);
-  })
-}
-
-function isDraw() {
-  return [...allCells].every(cell => {
-    return cell.classList.contains(crossesTurn) || cell.classList.contains(circleTurn);
   })
 }
 
@@ -149,11 +133,34 @@ function getWinner() {
 }
 
 function renderGameEnd(gameEnd) {
-    // if (gameEnd.scenario === 'horizontal') {
-    //   return
-    // }
+    if (gameEnd.scenario === 'horizontal') {
+      renderWinningMassage(gameEnd);
+      // wonMessage.textContent = `${gameEnd.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
+      // wonTitle.classList.remove('hidden');
+    }
+}
+function caseWin() {
+  // if (isWin(currentTurn())) {
+  //   wonMessage.textContent = `${lastTurn ? "Crosses won!" : "Toes won!"}`;
+  //   wonTitle.classList.remove('hidden');
+  //   disableClick();
+  // }
+  // if (isDraw()) {
+  //   wonMessage.textContent = `It's a draw!`;
+  //   wonTitle.classList.remove('hidden');
+  // }
 }
 
+function renderWinningMassage(markerClass) {
+  wonMessage.textContent = `${markerClass.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
+  wonTitle.classList.remove('hidden');
+}
+
+function isDraw(orderedCells) {
+  return orderedCells.every(cell => {
+    return cell.classList.contains(crossesTurn) || cell.classList.contains(circleTurn);
+  })
+}
 
 function horizontal(orderedCells) {
   for (let i = 0; i < numberOfRows; i++) {
