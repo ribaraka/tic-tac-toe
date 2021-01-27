@@ -34,7 +34,8 @@ function clickHandler(e) {
   // localStorage.setItem('history', JSON.stringify(history));
   // console.log(history);
   // TODO: make a function which returns win object and second one which renders proper win state.
-  caseWin();
+  let winner = getWinner();
+  renderGameEnd(winner);
 }
 
 function renderMove(cell, currentTurn) {
@@ -72,14 +73,6 @@ function isDraw() {
   })
 }
 
-// function isWin(currentTurn) {
-//   return winningCombinations.some(combination => {
-//     return combination.every(index => {
-//       return allCells[index].classList.contains(currentTurn);
-//     })
-//   })
-// }
-
 function addClickHandler() {
   allCells.forEach(cell => {
     cell.addEventListener('click', clickHandler);
@@ -103,6 +96,7 @@ function undoClick() {
   console.log(history);
   undoHistory.push(undoElement);
   undoElement.classList.remove(currentTurn());
+
   if (!history.length) {
     unDoButton.disabled = true;
   }
@@ -115,131 +109,159 @@ function redoClick() {
   localStorage.setItem('history', JSON.stringify(history));
   console.log(history);
   caseWin();
+
   if (!undoHistory.length) {
     redoDoButton.disabled = true;
   }
+
   if (history.length){
     unDoButton.disabled = false;
   }
+
   lastTurn = currentTurn();
 }
 
 function getWinner() {
-  // TODO: check horizontal scenario
-  // horizontal(allCells);
 
-  // TODO: check vertical scenario
-  // vertical(input)
-  // TODO: check diagonal scenario
-  // diagonalRight(input)
-  // diagonalLeft(input)
+  let winnerH = horizontal(orderedCells);
+  if (winnerH !== null){
+    return winnerH;
+  }
+  let winnerV = vertical(orderedCells);
+  if (winnerV !== null){
+    return winnerV;
+  }
+  let winnerDiagonalR = diagonalRight(orderedCells);
+  if (winnerDiagonalR !== null){
+    return winnerDiagonalR
+  }
+  let winnerDiagonalL = diagonalLeft(orderedCells);
+  if (winnerDiagonalL !== null){
+    return winnerDiagonalL;
+  }
+  // TODO: check Draw scenario;
   return {
-    winnerWasFound: true,
-    scenario: '',//diagonal, vertical, horizontal
+    draw: false,
+    scenario: '',//diagonalLeft, diagonalRight, vertical, horizontal
     winner: '',// r || ch
     cells: []
   };
 }
 
-function renderGameEnd() {
-
+function renderGameEnd(gameEnd) {
+    // if (gameEnd.scenario === 'horizontal') {
+    //   return
+    // }
 }
 
-function horizontal(input) {
-  input = getOrderedCells(input);
-  let numberOfRows = Math.sqrt(input.length);
+
+function horizontal(orderedCells) {
   for (let i = 0; i < numberOfRows; i++) {
     let j = i * numberOfRows;
     let theLatestIndexOfRow = i * numberOfRows + numberOfRows;
-    let cellClass = getClass(input[j]);
+    let cellClass = getClass(orderedCells[j]);
     if (cellClass === '') {
       continue
     }
     let result = [];
     let badRow = false;
     for (; j < theLatestIndexOfRow; j++) {
-      if (getClass(input[j]) !== cellClass){
+      if (getClass(orderedCells[j]) !== cellClass){
         badRow = true;
         break
       }
-      result.push(input[j]);
+      result.push(orderedCells[j]);
     }
     if (!badRow){
-      return result;
+        return {
+        draw: false,
+        scenario:'horizontal',
+        winner: getClass(result[0]),
+        cells: result,
+      }
     }
   }
-  return [];
+  return null;
 }
 
-function vertical(input) {
-  input = getOrderedCells(input);
-  let numberOfRows = Math.sqrt(input.length);
-  for (let i = 0; i < numberOfRows; i++){
+function vertical(orderedCells) {
+  for (let i = 0; i < numberOfRows; i++) {
     let j = i;
-    let theLatestIndexOfCol = i + input.length - numberOfRows;
-    let cellClass = getClass(input[j]);
+    let theLatestIndexOfCol = i + orderedCells.length - numberOfRows;
+    let cellClass = getClass(orderedCells[j]);
     if (cellClass === '') {
       continue
     }
     let result = [];
     let badRow = false;
-    while ( j <= theLatestIndexOfCol){
-      if (getClass(input[j]) !== cellClass){
+    while (j <= theLatestIndexOfCol) {
+      if (getClass(orderedCells[j]) !== cellClass) {
         badRow = true;
         break
       }
-      result.push(input[j]);
+      result.push(orderedCells[j]);
       j += numberOfRows;
     }
-    if (!badRow){
-      return result;
+    if (!badRow) {
+      return {
+        draw: false,
+        scenario: 'vertical',
+        winner: getClass(result[0]),
+        cells: result,
+      }
     }
   }
-  return [];
+    return null;
+
 }
 
-function diagonalRight(input) {
-  input = getOrderedCells(input);
-  let numberOfRows = Math.sqrt(input.length);
-  let index = input[0];
-  let cellClass = getClass(index);
+function diagonalRight(orderedCells) {
+  let startingPoint = orderedCells[0];
+  let cellClass = getClass(startingPoint);
   let result = [];
   let badRow = false;
-  for (let i = 0; i <= input.length; i++) {
-      if (getClass(input[i]) !== cellClass){
+  for (let i = 0; i <= orderedCells.length; i++) {
+      if (getClass(orderedCells[i]) !== cellClass){
         badRow = true;
         break
       }
-    result.push(input[i]);
+    result.push(orderedCells[i]);
       i += numberOfRows;
     }
     if (!badRow){
-      return result;
+      return {
+        draw: false,
+        scenario: 'diagonalRight',
+        winner: getClass(result[0]),
+        cells: result,
+      }
     }
-  return [];
+return null;
 }
 
-function diagonalLeft(input) {
-  input = getOrderedCells(input);
-  let numberOfRows = Math.sqrt(input.length);
-  let startPointFromLeftToRight = input.length - numberOfRows
-  let index = input[startPointFromLeftToRight];
-  let cellClass = getClass(index);
-  console.log(index);
+function diagonalLeft(orderedCells) {
+  let diagonalStartPointIndex = orderedCells.length - numberOfRows
+  let startingPoint = orderedCells[diagonalStartPointIndex];
+  let cellClass = getClass(startingPoint);
   let result = [];
   let badRow = false;
-  for (let i = startPointFromLeftToRight; i > 0; i++) {
-    if (getClass(input[i]) !== cellClass){
+  for (let i = diagonalStartPointIndex; i > 0; i++) {
+    if (getClass(orderedCells[i]) !== cellClass){
       badRow = true;
       break
     }
-    result.push(input[i]);
+    result.push(orderedCells[i]);
     i -= numberOfRows;
   }
   if (!badRow){
-    return result;
+    return {
+      draw: false,
+      scenario: 'diagonalLeft',
+      winner: getClass(result[0]),
+      cells: result,
+    }
   }
-  return [];
+  return null;
 }
 
 function getClass(cell){
@@ -263,6 +285,7 @@ function getOrderedCells(allCells) {
     let numID = Number.parseInt(ID, 10);
     result[numID] = cell;
   }
+
 return result;
 }
 
