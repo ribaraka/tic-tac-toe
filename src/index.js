@@ -19,6 +19,7 @@ unDoButton.addEventListener('click', undoClick);
 redoDoButton.addEventListener('click', redoClick);
 
 function startGame() {
+  lastTurn = circleTurn;
   wonTitle.classList.add('hidden');
   history = [];
   undoHistory = [];
@@ -33,7 +34,6 @@ function clickHandler(e) {
   history.push(cell);
   // localStorage.setItem('history', JSON.stringify(history));
   // console.log(history);
-  // TODO: make a function which returns win object and second one which renders proper win state.
   let winner = getWinner();
   renderGameEnd(winner);
 }
@@ -49,8 +49,6 @@ function currentTurn() {
   return  lastTurn === circleTurn ? crossesTurn :  circleTurn;
 }
 
-
-
 function disableClick() {
   allCells.forEach(cell => {
     cell.removeEventListener('click', clickHandler);
@@ -64,9 +62,14 @@ function addClickHandler() {
 }
 
 function clearField() {
-  allCells.forEach(cell => {
+  let winner = getWinner();
+  orderedCells.forEach(cell => {
     cell.classList.remove(crossesTurn);
     cell.classList.remove(circleTurn);
+    cell.classList.remove('win');
+    if (winner.scenario !== '') {
+      cell.classList.remove(winner.scenario);
+    }
   })
 }
 
@@ -75,9 +78,10 @@ function undoClick() {
   redoDoButton.disabled = false;
   wonTitle.classList.add('hidden');
   addClickHandler();
+  undoDisableDecorCells();
   let undoElement = history.pop();
-  localStorage.setItem('history', JSON.stringify(history));
-  console.log(history);
+  // localStorage.setItem('history', JSON.stringify(history));
+  // console.log(history);
   undoHistory.push(undoElement);
   undoElement.classList.remove(currentTurn());
 
@@ -86,13 +90,24 @@ function undoClick() {
   }
 }
 
+function undoDisableDecorCells() {
+  let winner = getWinner();
+  winner.cells.forEach(cell => {
+    cell.classList.remove('win');
+    if (winner.scenario !== '') {
+      cell.classList.remove(winner.scenario);
+    }
+  })
+}
+
 function redoClick() {
   let undoElement = undoHistory.pop();
   undoElement.classList.add(currentTurn());
   history.push(undoElement);
   localStorage.setItem('history', JSON.stringify(history));
   console.log(history);
-  caseWin();
+  let winner = getWinner();
+  renderGameEnd(winner);
 
   if (!undoHistory.length) {
     redoDoButton.disabled = true;
@@ -106,7 +121,6 @@ function redoClick() {
 }
 
 function getWinner() {
-
   let winnerH = horizontal(orderedCells);
   if (winnerH !== null){
     return winnerH;
@@ -123,7 +137,6 @@ function getWinner() {
   if (winnerDiagonalL !== null){
     return winnerDiagonalL;
   }
-  // TODO: check Draw scenario;
   return {
     draw: false,
     scenario: '',//diagonalLeft, diagonalRight, vertical, horizontal
@@ -132,28 +145,27 @@ function getWinner() {
   };
 }
 
-function renderGameEnd(gameEnd) {
-    if (gameEnd.scenario === 'horizontal') {
-      renderWinningMassage(gameEnd);
-      // wonMessage.textContent = `${gameEnd.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
-      // wonTitle.classList.remove('hidden');
-    }
-}
-function caseWin() {
-  // if (isWin(currentTurn())) {
-  //   wonMessage.textContent = `${lastTurn ? "Crosses won!" : "Toes won!"}`;
-  //   wonTitle.classList.remove('hidden');
-  //   disableClick();
-  // }
-  // if (isDraw()) {
-  //   wonMessage.textContent = `It's a draw!`;
-  //   wonTitle.classList.remove('hidden');
-  // }
+function renderGameEnd(winningCells) {
+  if (winningCells.scenario !== ''){
+    renderWinningMassage(winningCells);
+    renderWinningDecor(winningCells);
+    disableClick();
+  } else if (isDraw(orderedCells)){
+    wonMessage.textContent = `It's a draw!`;
+    wonTitle.classList.remove('hidden');
+  }
 }
 
-function renderWinningMassage(markerClass) {
-  wonMessage.textContent = `${markerClass.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
+function renderWinningMassage(winningCells) {
+  wonMessage.textContent = `${winningCells.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
   wonTitle.classList.remove('hidden');
+}
+
+function renderWinningDecor(winningCells) {
+  winningCells.cells.forEach(cell =>{
+    cell.classList.add('win');
+    cell.classList.add(winningCells.scenario);
+  })
 }
 
 function isDraw(orderedCells) {
@@ -188,6 +200,7 @@ function horizontal(orderedCells) {
       }
     }
   }
+
   return null;
 }
 
@@ -218,13 +231,16 @@ function vertical(orderedCells) {
       }
     }
   }
-    return null;
 
+    return null;
 }
 
 function diagonalRight(orderedCells) {
   let startingPoint = orderedCells[0];
   let cellClass = getClass(startingPoint);
+  if (cellClass === '') {
+    return null;
+  }
   let result = [];
   let badRow = false;
   for (let i = 0; i <= orderedCells.length; i++) {
@@ -238,7 +254,7 @@ function diagonalRight(orderedCells) {
     if (!badRow){
       return {
         draw: false,
-        scenario: 'diagonalRight',
+        scenario: 'diagonal-right',
         winner: getClass(result[0]),
         cells: result,
       }
@@ -250,6 +266,9 @@ function diagonalLeft(orderedCells) {
   let diagonalStartPointIndex = orderedCells.length - numberOfRows
   let startingPoint = orderedCells[diagonalStartPointIndex];
   let cellClass = getClass(startingPoint);
+  if (cellClass === '') {
+    return null;
+  }
   let result = [];
   let badRow = false;
   for (let i = diagonalStartPointIndex; i > 0; i++) {
@@ -263,7 +282,7 @@ function diagonalLeft(orderedCells) {
   if (!badRow){
     return {
       draw: false,
-      scenario: 'diagonalLeft',
+      scenario: 'diagonal-left',
       winner: getClass(result[0]),
       cells: result,
     }
