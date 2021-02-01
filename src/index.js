@@ -25,15 +25,21 @@ function startGame() {
   undoHistory = [];
   clearField();
   addClickHandler();
-  }
+}
 
 function clickHandler(e) {
   const cell = e.target;
   lastTurn = currentTurn();
   renderMove(cell, lastTurn);
   history.push(cell);
-  // localStorage.setItem('history', JSON.stringify(history));
-  // console.log(history);
+  let cells = history.map(cell => {
+    return {
+      id: cell.id,
+      cl: getClass(cell),
+    }
+  })
+  localStorage.setItem('history', JSON.stringify(cells));
+  console.log(history);
   let winner = getWinner();
   renderGameEnd(winner);
 }
@@ -46,17 +52,17 @@ function renderMove(cell, currentTurn) {
 }
 
 function currentTurn() {
-  return  lastTurn === circleTurn ? crossesTurn :  circleTurn;
+  return lastTurn === circleTurn ? crossesTurn : circleTurn;
 }
 
 function disableClick() {
-  allCells.forEach(cell => {
+  orderedCells.forEach(cell => {
     cell.removeEventListener('click', clickHandler);
   })
 }
 
 function addClickHandler() {
-  allCells.forEach(cell => {
+  orderedCells.forEach(cell => {
     cell.addEventListener('click', clickHandler);
   });
 }
@@ -80,8 +86,8 @@ function undoClick() {
   addClickHandler();
   undoDisableDecorCells();
   let undoElement = history.pop();
-  // localStorage.setItem('history', JSON.stringify(history));
-  // console.log(history);
+  localStorage.setItem('history', JSON.stringify(history));
+  console.log(history);
   undoHistory.push(undoElement);
   undoElement.classList.remove(currentTurn());
 
@@ -113,7 +119,7 @@ function redoClick() {
     redoDoButton.disabled = true;
   }
 
-  if (history.length){
+  if (history.length) {
     unDoButton.disabled = false;
   }
 
@@ -121,57 +127,67 @@ function redoClick() {
 }
 
 function getWinner() {
-  let winnerH = horizontal(orderedCells);
-  if (winnerH !== null){
-    return winnerH;
-  }
-  let winnerV = vertical(orderedCells);
-  if (winnerV !== null){
-    return winnerV;
-  }
-  let winnerDiagonalR = diagonalRight(orderedCells);
-  if (winnerDiagonalR !== null){
-    return winnerDiagonalR
-  }
-  let winnerDiagonalL = diagonalLeft(orderedCells);
-  if (winnerDiagonalL !== null){
-    return winnerDiagonalL;
-  }
-  return {
-    draw: false,
-    scenario: '',//diagonalLeft, diagonalRight, vertical, horizontal
+  let winners = [horizontal, vertical, diagonalLeft, diagonalRight, draw].map(fn => {
+    return fn(orderedCells);
+  });
+  let winner = winners.find(winner => {
+    return winner !== null;
+  })
+
+  return winner || {
+    scenario: '',//diagonalLeft, diagonalRight, vertical, horizontal, draw
     winner: '',// r || ch
     cells: []
   };
 }
 
-function renderGameEnd(winningCells) {
-  if (winningCells.scenario !== ''){
-    renderWinningMassage(winningCells);
-    renderWinningDecor(winningCells);
-    disableClick();
-  } else if (isDraw(orderedCells)){
-    wonMessage.textContent = `It's a draw!`;
-    wonTitle.classList.remove('hidden');
+function renderGameEnd(winner) {
+  if (winner.scenario === '') {
+    return
+  }
+  renderWinningMassage(winner);
+  renderWinningDecor(winner);
+  disableClick();
+}
+
+function renderWinningMassage(winner) {
+  let scenario = winner.scenario;
+  switch (scenario) {
+    case "diagonal-left":
+    case "diagonal-right":
+    case "horizontal":
+    case "vertical":
+      wonMessage.textContent = `${winner.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
+      wonTitle.classList.remove('hidden');
+      break;
+
+    case "draw":
+      wonMessage.textContent = `It's a draw!`;
+      wonTitle.classList.remove('hidden');
+      break;
   }
 }
 
-function renderWinningMassage(winningCells) {
-  wonMessage.textContent = `${winningCells.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
-  wonTitle.classList.remove('hidden');
-}
-
 function renderWinningDecor(winningCells) {
-  winningCells.cells.forEach(cell =>{
+  winningCells.cells.forEach(cell => {
     cell.classList.add('win');
     cell.classList.add(winningCells.scenario);
   })
 }
 
-function isDraw(orderedCells) {
-  return orderedCells.every(cell => {
+function draw(orderedCells) {
+  let draw = orderedCells.every(cell => {
     return cell.classList.contains(crossesTurn) || cell.classList.contains(circleTurn);
-  })
+  });
+  if (draw){
+    return {
+      scenario: 'draw',
+      winner: '',
+      cells: '',
+    }
+  }
+
+  return null;
 }
 
 function horizontal(orderedCells) {
@@ -185,16 +201,16 @@ function horizontal(orderedCells) {
     let result = [];
     let badRow = false;
     for (; j < theLatestIndexOfRow; j++) {
-      if (getClass(orderedCells[j]) !== cellClass){
+      if (getClass(orderedCells[j]) !== cellClass) {
         badRow = true;
         break
       }
       result.push(orderedCells[j]);
     }
-    if (!badRow){
-        return {
+    if (!badRow) {
+      return {
         draw: false,
-        scenario:'horizontal',
+        scenario: 'horizontal',
         winner: getClass(result[0]),
         cells: result,
       }
@@ -232,7 +248,7 @@ function vertical(orderedCells) {
     }
   }
 
-    return null;
+  return null;
 }
 
 function diagonalRight(orderedCells) {
@@ -244,22 +260,22 @@ function diagonalRight(orderedCells) {
   let result = [];
   let badRow = false;
   for (let i = 0; i <= orderedCells.length; i++) {
-      if (getClass(orderedCells[i]) !== cellClass){
-        badRow = true;
-        break
-      }
+    if (getClass(orderedCells[i]) !== cellClass) {
+      badRow = true;
+      break
+    }
     result.push(orderedCells[i]);
-      i += numberOfRows;
+    i += numberOfRows;
+  }
+  if (!badRow) {
+    return {
+      draw: false,
+      scenario: 'diagonal-right',
+      winner: getClass(result[0]),
+      cells: result,
     }
-    if (!badRow){
-      return {
-        draw: false,
-        scenario: 'diagonal-right',
-        winner: getClass(result[0]),
-        cells: result,
-      }
-    }
-return null;
+  }
+  return null;
 }
 
 function diagonalLeft(orderedCells) {
@@ -272,14 +288,14 @@ function diagonalLeft(orderedCells) {
   let result = [];
   let badRow = false;
   for (let i = diagonalStartPointIndex; i > 0; i++) {
-    if (getClass(orderedCells[i]) !== cellClass){
+    if (getClass(orderedCells[i]) !== cellClass) {
       badRow = true;
       break
     }
     result.push(orderedCells[i]);
     i -= numberOfRows;
   }
-  if (!badRow){
+  if (!badRow) {
     return {
       draw: false,
       scenario: 'diagonal-left',
@@ -290,12 +306,12 @@ function diagonalLeft(orderedCells) {
   return null;
 }
 
-function getClass(cell){
-  if (cell.classList.contains('r')){
+function getClass(cell) {
+  if (cell.classList.contains('r')) {
     return 'r';
   }
 
-  if (cell.classList.contains('ch')){
+  if (cell.classList.contains('ch')) {
     return 'ch'
   }
 
@@ -304,7 +320,7 @@ function getClass(cell){
 
 function getOrderedCells(allCells) {
   let result = [];
-  for (let i = 0; i < allCells.length; i++){
+  for (let i = 0; i < allCells.length; i++) {
     let cell = allCells[i];
     let cellID = cell.id;
     let ID = cellID.split('-')[1];
@@ -312,6 +328,6 @@ function getOrderedCells(allCells) {
     result[numID] = cell;
   }
 
-return result;
+  return result;
 }
 
