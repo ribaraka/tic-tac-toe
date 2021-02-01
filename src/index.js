@@ -145,12 +145,11 @@ function renderGameEnd(winner) {
   if (winner.scenario === '') {
     return
   }
-  renderWinningMassage(winner);
   renderWinningDecor(winner);
   disableClick();
 }
 
-function renderWinningMassage(winner) {
+function renderWinningDecor(winner) {
   let scenario = winner.scenario;
   switch (scenario) {
     case "diagonal-left":
@@ -159,6 +158,10 @@ function renderWinningMassage(winner) {
     case "vertical":
       wonMessage.textContent = `${winner.winner === crossesTurn ? "Crosses won!" : "Toes won!"}`;
       wonTitle.classList.remove('hidden');
+      winner.cells.forEach(cell => {
+        cell.classList.add('win');
+        cell.classList.add(scenario);
+      })
       break;
 
     case "draw":
@@ -166,13 +169,6 @@ function renderWinningMassage(winner) {
       wonTitle.classList.remove('hidden');
       break;
   }
-}
-
-function renderWinningDecor(winningCells) {
-  winningCells.cells.forEach(cell => {
-    cell.classList.add('win');
-    cell.classList.add(winningCells.scenario);
-  })
 }
 
 function draw(orderedCells) {
