@@ -1,5 +1,5 @@
-const ROWS_COUNT = 3;
-const COLS_COUNT = 3;
+export const ROWS_COUNT = 3;
+export const COLS_COUNT = 3;
 const field = document.querySelector('.field');
 
 function generateCols(row, colsCount, rowId) {
@@ -13,7 +13,7 @@ function generateCols(row, colsCount, rowId) {
   }
 }
 
-function generateRows(rowsCount, colsCount) {
+export function generateRows(rowsCount, colsCount) {
   for (let i = 0; i < rowsCount; i++) {
     const row = document.createElement('div');
     row.className = 'row';

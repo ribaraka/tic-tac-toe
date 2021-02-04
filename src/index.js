@@ -1,3 +1,6 @@
+import {generateRows, ROWS_COUNT, COLS_COUNT} from './generateField.js';
+import './style.css';
+
 const allCells = document.querySelectorAll('.cell');
 const circleTurn = 'r';
 const crossesTurn = 'ch';
@@ -51,7 +54,7 @@ function theLastElementWithClass() {
 }
 
 function clickHandler(e) {
-
+  history = JSON.parse(localStorage.getItem('history')) || [];
   const id = e.target.id;
   lastTurn = currentTurn();
   let cell = {
@@ -59,13 +62,12 @@ function clickHandler(e) {
     lastTurn,
     undo: false,
   };
-
+  console.log(history);
   history.splice(theLastElementWithClass(), history.length);
   history.push(cell);
   localStorage.setItem('history', JSON.stringify(history));
   renderGame();
   checkAvailabilityButton();
-
 }
 
 function currentTurn() {
@@ -123,7 +125,6 @@ function undoHandler() {
 
 }
 
-  
 function undoDisableDecorCells() {
 
   checkAvailabilityButton();
@@ -153,8 +154,6 @@ function redoHandler() {
   checkAvailabilityButton();
     lastTurn = currentTurn();
   }
-  
-
 
 function getWinner() {
   let winners = [horizontal, vertical, diagonalLeft, diagonalRight, draw].map(fn => {
@@ -215,7 +214,6 @@ function draw(orderedCells) {
 
   return null;
 }
-
 
 function horizontal(orderedCells) {
   for (let i = 0; i < numberOfRows; i++) {
