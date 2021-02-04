@@ -28,8 +28,7 @@ function restartGame() {
 
 function renderGame() {
   clearField();
-  let cells = JSON.parse(localStorage.getItem('history'));
-  cells.forEach(cell => {
+  history.forEach(cell => {
     if (cell.undo === true){
       return;
     }
@@ -356,9 +355,6 @@ function getOrderedCells(allCells) {
 }
 
 window.addEventListener('storageModified', () => {
-  // const cells = JSON.parse(localStorage.getItem('history'));
-  // console.log(cells);
-
   if (!history){
     return;
   }
@@ -368,7 +364,6 @@ window.addEventListener('storageModified', () => {
     }
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
-    // history.push(cell);
     lastTurn = currentTurn();
   })
 
@@ -378,18 +373,17 @@ window.addEventListener('storageModified', () => {
 });
 
 window.addEventListener('storage', () => {
-  // const cells = JSON.parse(localStorage.getItem('history'));
+  const cells = JSON.parse(localStorage.getItem('history'));
   if (!history.length) {
     return restartGame();
   }
   clearField();
-  history.forEach(cell => {
+
+  cells.forEach(cell => {
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
-    history.push(cell);
   })
   lastTurn = currentTurn();
-
   checkAvailabilityButton();
   let winner = getWinner();
   renderGameEnd(winner);
