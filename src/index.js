@@ -9,8 +9,6 @@ const redoDoButton = document.querySelector('.redo-btn');
 let lastTurn = circleTurn;
 let history = [];
 let undoHistory = [];
-let storageCells = JSON.parse(localStorage.getItem('history'));
-
 const orderedCells = getOrderedCells(allCells);
 const numberOfRows = Math.sqrt(orderedCells.length);
 
@@ -20,7 +18,7 @@ redoDoButton.addEventListener('click', redoHandler);
 addClickHandler();
 
 function restartGame() {
-  undoButton.disabled = true;
+  checkAvailabilityButton()
   lastTurn = circleTurn;
   wonTitle.classList.add('hidden');
   history = [];
@@ -31,71 +29,46 @@ function restartGame() {
 }
 
 function renderGame() {
-  let cells = JSON.parse(localStorage.getItem('history')) || history;
+  clearField();
+  let cells = JSON.parse(localStorage.getItem('history'));
   cells.forEach(cell => {
+    if (cell.undo === true){
+      return;
+    }
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
-
   })
   let winner = getWinner();
   renderGameEnd(winner);
-  undoButton.disabled = false;
-
 }
 
-window.addEventListener('storageModified', () => {
-  const cells = JSON.parse(localStorage.getItem('history'));
-  if (!cells){
-    return;
+function theLastElementWithClass() {
+  let count = 0;
+  for (let i = 0; i < history.length; i++){
+    if (history[i].undo === true){
+      break
+    }
+    count++;
   }
-  cells.forEach(cell => {
-    let cellElement = document.getElementById(cell.id);
-    cellElement.classList.add(cell.lastTurn);
-    history.push(cell);
-    lastTurn = currentTurn();
-  })
-  if (history.length) {
-    undoButton.disabled = false;
-  }
-  let winner = getWinner();
-  renderGameEnd(winner);
-});
-
-window.addEventListener('storage', () => {
-  const cells = JSON.parse(localStorage.getItem('history'));
-  if (!cells.length) {
-    return restartGame();
-  }
-  history = [];
-  clearField();
-  cells.forEach(cell => {
-    let cellElement = document.getElementById(cell.id);
-    cellElement.classList.add(cell.lastTurn);
-    history.push(cell);
-  })
-  lastTurn = currentTurn();
-
-  if (history.length) {
-    undoButton.disabled = false;
-  }
-  let winner = getWinner();
-  renderGameEnd(winner);
-});
-
-window.addEventListener('load', () => {
-  const storageModifiedEvent = new CustomEvent('storageModified');
-  window.dispatchEvent(storageModifiedEvent);
-});
+  return count;
+}
 
 function clickHandler(e) {
+
   const id = e.target.id;
   lastTurn = currentTurn();
-  undoButton.disabled = false;
-  redoDoButton.disabled = true;
-  undoHistory = [];
-  history.push({id, lastTurn});
+  let cell = {
+    id,
+    lastTurn,
+    undo: false,
+  };
+
+  history.splice(theLastElementWithClass(), history.length);
+  history.push(cell);
   localStorage.setItem('history', JSON.stringify(history));
   renderGame();
+  checkAvailabilityButton();
+
 }
 
 function currentTurn() {
@@ -126,28 +99,38 @@ function clearField() {
   })
 }
 
+function checkAvailabilityButton() {
+  if (!history.length){
+    return;
+  }
+  redoDoButton.disabled = history[history.length - 1].undo === false;
+  undoButton.disabled = history[0].undo === true;
+}
+
 function undoHandler() {
   lastTurn = currentTurn();
   addClickHandler();
   undoDisableDecorCells();
-  let undoElement = history.pop();
-  localStorage.setItem('history', JSON.stringify(history));
-  undoHistory.push(undoElement);
-  let cellElement = document.getElementById(undoElement.id);
-  cellElement = cellElement.classList.remove(undoElement.lastTurn);
-  clearField();
-  renderGame();
-  if (!history.length) {
-    undoButton.disabled = true;
+  
+  for (let i = history.length - 1; i => 0; i--) {
+    if (history[i].undo === false) {
+      history[i].undo = true;
+      localStorage.setItem('history', JSON.stringify(history));
+      break;
+    }
   }
+  renderGame();
+  checkAvailabilityButton();
+
 }
 
+  
 function undoDisableDecorCells() {
-  redoDoButton.disabled = false;
+  checkAvailabilityButton();
   wonTitle.classList.add('hidden');
   let winner = getWinner();
   if (winner.scenario === 'draw'){
-    return
+    return;
   }
   winner.cells.forEach(cell => {
     cell.classList.remove('win');
@@ -158,24 +141,19 @@ function undoDisableDecorCells() {
 }
 
 function redoHandler() {
-  let undoElement = undoHistory.pop();
-  let cellElement = document.getElementById(undoElement.id);
-  cellElement.classList.add(undoElement.lastTurn);
-  history.push(undoElement);
-  localStorage.setItem('history', JSON.stringify(history));
-  let winner = getWinner();
-  renderGameEnd(winner);
-
-  if (!undoHistory.length) {
-    redoDoButton.disabled = true;
+  for (let i = 0; i < history.length; i++) {
+    if (history[i].undo === true) {
+      history[i].undo = false;
+      localStorage.setItem('history', JSON.stringify(history));
+      break;
+    }
   }
-
-  if (history.length) {
-    undoButton.disabled = false;
+    renderGame();
+  checkAvailabilityButton();
+    lastTurn = currentTurn();
   }
+  
 
-  lastTurn = currentTurn();
-}
 
 function getWinner() {
   let winners = [horizontal, vertical, diagonalLeft, diagonalRight, draw].map(fn => {
@@ -236,6 +214,7 @@ function draw(orderedCells) {
 
   return null;
 }
+
 
 function horizontal(orderedCells) {
   for (let i = 0; i < numberOfRows; i++) {
@@ -378,3 +357,46 @@ function getOrderedCells(allCells) {
   return result;
 }
 
+window.addEventListener('storageModified', () => {
+  const cells = JSON.parse(localStorage.getItem('history'));
+  if (!cells){
+    return;
+  }
+  cells.forEach(cell => {
+    if (cell.undo === true){
+      return;
+    }
+    let cellElement = document.getElementById(cell.id);
+    cellElement.classList.add(cell.lastTurn);
+    history.push(cell);
+    lastTurn = currentTurn();
+  })
+
+  checkAvailabilityButton();
+  let winner = getWinner();
+  renderGameEnd(winner);
+});
+
+window.addEventListener('storage', () => {
+  const cells = JSON.parse(localStorage.getItem('history'));
+  if (!cells.length) {
+    return restartGame();
+  }
+  history = [];
+  clearField();
+  cells.forEach(cell => {
+    let cellElement = document.getElementById(cell.id);
+    cellElement.classList.add(cell.lastTurn);
+    history.push(cell);
+  })
+  lastTurn = currentTurn();
+
+  checkAvailabilityButton();
+  let winner = getWinner();
+  renderGameEnd(winner);
+});
+
+window.addEventListener('load', () => {
+  const storageModifiedEvent = new CustomEvent('storageModified');
+  window.dispatchEvent(storageModifiedEvent);
+});
