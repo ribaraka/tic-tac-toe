@@ -97,14 +97,16 @@ function clearField() {
 }
 
 function checkAvailabilityButton() {
-  if (!history.length){
+  let cells = JSON.parse(localStorage.getItem('history'))
+  if (!cells.length){
     return;
   }
-  redoDoButton.disabled = history[history.length - 1].undo === false;
-  undoButton.disabled = history[0].undo === true;
+  redoDoButton.disabled = cells[cells.length - 1].undo === false;
+  undoButton.disabled = cells[0].undo === true;
 }
 
 function undoHandler() {
+  history = JSON.parse(localStorage.getItem('history'));
   lastTurn = currentTurn();
   addClickHandler();
   undoDisableDecorCells();
@@ -123,6 +125,7 @@ function undoHandler() {
 
   
 function undoDisableDecorCells() {
+
   checkAvailabilityButton();
   wonTitle.classList.add('hidden');
   let winner = getWinner();
@@ -138,6 +141,7 @@ function undoDisableDecorCells() {
 }
 
 function redoHandler() {
+  history = JSON.parse(localStorage.getItem('history'));
   for (let i = 0; i < history.length; i++) {
     if (history[i].undo === true) {
       history[i].undo = false;
@@ -355,6 +359,7 @@ function getOrderedCells(allCells) {
 }
 
 window.addEventListener('storageModified', () => {
+  history = JSON.parse(localStorage.getItem('history'));
   if (!history){
     return;
   }
@@ -366,26 +371,32 @@ window.addEventListener('storageModified', () => {
     cellElement.classList.add(cell.lastTurn);
     lastTurn = currentTurn();
   })
-
   checkAvailabilityButton();
   let winner = getWinner();
   renderGameEnd(winner);
 });
 
 window.addEventListener('storage', () => {
-  const cells = JSON.parse(localStorage.getItem('history'));
+  history = JSON.parse(localStorage.getItem('history'));
   if (!history.length) {
     return restartGame();
   }
-  clearField();
 
-  cells.forEach(cell => {
+  clearField();
+  history.forEach(cell => {
+    if (cell.undo === true){
+      return;
+    }
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
   })
   lastTurn = currentTurn();
   checkAvailabilityButton();
   let winner = getWinner();
+  if (winner.winner === ''){
+    undoDisableDecorCells();
+    addClickHandler();
+  }
   renderGameEnd(winner);
 });
 
