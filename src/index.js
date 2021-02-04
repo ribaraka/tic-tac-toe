@@ -7,8 +7,7 @@ const restartButton = document.querySelector('.restart-btn');
 const undoButton = document.querySelector('.undo-btn');
 const redoDoButton = document.querySelector('.redo-btn');
 let lastTurn = circleTurn;
-let history = [];
-let undoHistory = [];
+let history = JSON.parse(localStorage.getItem('history')) || [];
 const orderedCells = getOrderedCells(allCells);
 const numberOfRows = Math.sqrt(orderedCells.length);
 
@@ -18,11 +17,10 @@ redoDoButton.addEventListener('click', redoHandler);
 addClickHandler();
 
 function restartGame() {
-  checkAvailabilityButton()
   lastTurn = circleTurn;
   wonTitle.classList.add('hidden');
   history = [];
-  undoHistory = [];
+  undoButton.disabled = true;
   clearField();
   addClickHandler();
   localStorage.setItem('history', JSON.stringify(history));
@@ -358,17 +356,19 @@ function getOrderedCells(allCells) {
 }
 
 window.addEventListener('storageModified', () => {
-  const cells = JSON.parse(localStorage.getItem('history'));
-  if (!cells){
+  // const cells = JSON.parse(localStorage.getItem('history'));
+  // console.log(cells);
+
+  if (!history){
     return;
   }
-  cells.forEach(cell => {
+  history.forEach(cell => {
     if (cell.undo === true){
       return;
     }
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
-    history.push(cell);
+    // history.push(cell);
     lastTurn = currentTurn();
   })
 
@@ -378,13 +378,12 @@ window.addEventListener('storageModified', () => {
 });
 
 window.addEventListener('storage', () => {
-  const cells = JSON.parse(localStorage.getItem('history'));
-  if (!cells.length) {
+  // const cells = JSON.parse(localStorage.getItem('history'));
+  if (!history.length) {
     return restartGame();
   }
-  history = [];
   clearField();
-  cells.forEach(cell => {
+  history.forEach(cell => {
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
     history.push(cell);
