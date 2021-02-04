@@ -31,34 +31,55 @@ function restartGame() {
 }
 
 function renderGame() {
-  undoButton.disabled = false;
   let cells = JSON.parse(localStorage.getItem('history')) || history;
-  console.log(cells);
-  // if (cells.length === 0){
-  //   restartGame();
-  // }
   cells.forEach(cell => {
     let cellElement = document.getElementById(cell.id);
     cellElement.classList.add(cell.lastTurn);
+
   })
   let winner = getWinner();
   renderGameEnd(winner);
+  undoButton.disabled = false;
+
 }
 
-// window.addEventListener('storageModified', () => {
-//   const storedTasks = JSON.parse(localStorage.getItem('history'));
-//   if (!storedTasks){
-//     return;
-//   }
-//   renderGame();
-// });
-
-window.addEventListener('storage', () => {
-  const storedTasks = JSON.parse(localStorage.getItem('history'));
-  if (!storedTasks){
+window.addEventListener('storageModified', () => {
+  const cells = JSON.parse(localStorage.getItem('history'));
+  if (!cells){
     return;
   }
-  renderGame();
+  cells.forEach(cell => {
+    let cellElement = document.getElementById(cell.id);
+    cellElement.classList.add(cell.lastTurn);
+    history.push(cell);
+    lastTurn = currentTurn();
+  })
+  if (history.length) {
+    undoButton.disabled = false;
+  }
+  let winner = getWinner();
+  renderGameEnd(winner);
+});
+
+window.addEventListener('storage', () => {
+  const cells = JSON.parse(localStorage.getItem('history'));
+  if (!cells.length) {
+    return restartGame();
+  }
+  history = [];
+  clearField();
+  cells.forEach(cell => {
+    let cellElement = document.getElementById(cell.id);
+    cellElement.classList.add(cell.lastTurn);
+    history.push(cell);
+  })
+  lastTurn = currentTurn();
+
+  if (history.length) {
+    undoButton.disabled = false;
+  }
+  let winner = getWinner();
+  renderGameEnd(winner);
 });
 
 window.addEventListener('load', () => {
@@ -73,18 +94,8 @@ function clickHandler(e) {
   redoDoButton.disabled = true;
   undoHistory = [];
   history.push({id, lastTurn});
-  const storageModifiedEvent = new CustomEvent('storageModified');
-  window.dispatchEvent(storageModifiedEvent);
   localStorage.setItem('history', JSON.stringify(history));
   renderGame();
-
-}
-
-function renderMove(cell, currentTurn) {
-  undoButton.disabled = false;
-  cell.classList.add(currentTurn);
-  undoHistory = [];
-  redoDoButton.disabled = true;
 }
 
 function currentTurn() {
